@@ -1,10 +1,21 @@
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { categories, tools } from './data/tools'
 
 const STORAGE = {
   favorites: 'findapp:favorites',
   recent: 'findapp:recent',
 }
+
+const SMU_LINKS = [
+  { name: '샘물포털', short: '포털', description: '통합정보·웹메일·학사서비스', url: 'https://portal.smu.ac.kr', icon: 'S' },
+  { name: 'e-Campus', short: '이캠퍼스', description: '강의·과제·온라인 학습', url: 'https://ecampus.smu.ac.kr/', icon: 'e' },
+  { name: '수강신청', short: '수강신청', description: '수강신청·정정 시스템', url: 'https://sugang.smu.ac.kr/', icon: '수' },
+  { name: 'SM-EDU', short: 'SM-EDU', description: '학사 통합 대시보드·AI 학사안내', url: 'https://smedu.smu.ac.kr/', icon: 'AI' },
+  { name: '스마트출결', short: '출결', description: '모바일 출석·출결 현황', url: 'https://att.smu.ac.kr/', icon: '✓' },
+  { name: '통합공지', short: '공지', description: '학사·장학·학생생활 공지', url: 'https://www.smu.ac.kr/lounge/notice/notice.do', icon: '!' },
+  { name: '학사일정', short: '학사일정', description: '개강·시험·종강 일정', url: 'https://www.smu.ac.kr/ko/life/academicCalendar.do', icon: '日' },
+  { name: '상명대학교', short: '학교홈', description: '상명대학교 공식 홈페이지', url: 'https://www.smu.ac.kr/ko/index.do', icon: 'SM' },
+]
 
 const CATEGORY_ICON = {
   전체: '⌕',
@@ -113,7 +124,7 @@ function PickCard({ label, tool, onOpen, onShuffle, accent = false }) {
         <span className="pick-label">{label}</span>
         {onShuffle && (
           <button className="mini-button" onClick={onShuffle}>
-            다시 뽑기
+            다른 도구 보기
           </button>
         )}
       </div>
@@ -123,7 +134,7 @@ function PickCard({ label, tool, onOpen, onShuffle, accent = false }) {
         <div>
           <h3>{tool.name}</h3>
           <p>{tool.description}</p>
-          <span className="pick-link">바로 열기 ↗</span>
+          <span className="pick-link">사이트 열기 ↗</span>
         </div>
       </button>
     </article>
@@ -141,6 +152,32 @@ function App() {
   const [favorites, setFavorites] = useState(() => loadJson(STORAGE.favorites, []))
   const [recent, setRecent] = useState(() => loadJson(STORAGE.recent, []))
   const [randomId, setRandomId] = useState(null)
+  const [installPrompt, setInstallPrompt] = useState(null)
+  const [installHelp, setInstallHelp] = useState(false)
+  const [isInstalled, setIsInstalled] = useState(
+    () => window.matchMedia?.('(display-mode: standalone)').matches || window.navigator.standalone === true,
+  )
+
+  useEffect(() => {
+    const handleBeforeInstall = (event) => {
+      event.preventDefault()
+      setInstallPrompt(event)
+    }
+
+    const handleInstalled = () => {
+      setIsInstalled(true)
+      setInstallPrompt(null)
+      setInstallHelp(false)
+    }
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstall)
+    window.addEventListener('appinstalled', handleInstalled)
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstall)
+      window.removeEventListener('appinstalled', handleInstalled)
+    }
+  }, [])
 
   const filtered = useMemo(() => {
     const keyword = query.trim().toLowerCase()
@@ -245,6 +282,26 @@ function App() {
   const showFavorites = () => {
     setFavoritesOnly(true)
     setCategory('전체')
+    window.setTimeout(() => {
+      document.getElementById('results')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 0)
+  }
+
+  const handleInstall = async () => {
+    if (isInstalled) return
+
+    if (installPrompt) {
+      installPrompt.prompt()
+      await installPrompt.userChoice
+      setInstallPrompt(null)
+      return
+    }
+
+    setInstallHelp(true)
+  }
+
+  const scrollTo = (id) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
   return (
@@ -310,23 +367,38 @@ function App() {
             <span className="brand-mark">F</span>
             <strong>FINDAPP</strong>
           </a>
-          <button className="mobile-favorite" onClick={showFavorites}>
-            ★ {favorites.length}
-          </button>
+          <div className="mobile-header-actions">
+            {!isInstalled && (
+              <button className="mobile-install" onClick={handleInstall}>
+                설치
+              </button>
+            )}
+            <button className="mobile-favorite" onClick={showFavorites}>
+              ★ {favorites.length}
+            </button>
+          </div>
         </header>
 
-        <section className="top-section">
+        <section className="top-section" id="home">
           <div className="top-meta">
             <div>
               <p className="eyebrow">DISCOVER BETTER TOOLS</p>
-              <h1>뭘 찾고 있어?</h1>
+              <h1>무엇을 찾고 계신가요?</h1>
               <p className="intro">
-                필요한 작업을 검색하면 바로 쓸 수 있는 사이트와 앱을 찾아줄게
+                필요한 작업을 검색하시면 바로 사용할 수 있는 사이트와 앱을 찾아드립니다
               </p>
             </div>
-            <div className="tool-counter">
-              <strong>{tools.length}</strong>
-              <span>TOOLS</span>
+            <div className="top-actions">
+              {!isInstalled && (
+                <button className="install-button" onClick={handleInstall}>
+                  <span>＋</span>
+                  FINDAPP 설치
+                </button>
+              )}
+              <div className="tool-counter">
+                <strong>{tools.length}</strong>
+                <span>TOOLS</span>
+              </div>
             </div>
           </div>
 
@@ -354,6 +426,28 @@ function App() {
               </button>
             ))}
           </div>
+
+          <section className="smu-quick" id="smu-links">
+            <div className="smu-heading">
+              <div>
+                <p>SMU QUICK LINKS</p>
+                <h2>상명대 바로가기</h2>
+              </div>
+              <span>자주 사용하는 학교 서비스를 빠르게 열어보세요</span>
+            </div>
+            <div className="smu-link-grid">
+              {SMU_LINKS.map((link) => (
+                <a key={link.name} className="smu-link" href={link.url} target="_blank" rel="noopener noreferrer">
+                  <span className="smu-link-icon">{link.icon}</span>
+                  <span className="smu-link-copy">
+                    <strong>{link.name}</strong>
+                    <small>{link.description}</small>
+                  </span>
+                  <span className="smu-link-arrow">↗</span>
+                </a>
+              ))}
+            </div>
+          </section>
 
           <div className="mobile-categories">
             {categories.map((item) => (
@@ -448,7 +542,7 @@ function App() {
             </section>
           )}
 
-          <section className="results-section">
+          <section className="results-section" id="results">
             <div className="section-heading result-heading">
               <div>
                 <p>EXPLORE</p>
@@ -478,8 +572,8 @@ function App() {
             ) : (
               <div className="empty-state">
                 <span>⌕</span>
-                <h3>조건에 맞는 도구가 없어</h3>
-                <p>검색어나 필터를 바꾸면 더 많은 결과를 볼 수 있어</p>
+                <h3>조건에 맞는 도구가 없습니다</h3>
+                <p>검색어나 필터를 변경하시면 더 많은 결과를 확인하실 수 있습니다</p>
                 <button onClick={resetFilters}>전체 도구 보기</button>
               </div>
             )}
@@ -488,11 +582,43 @@ function App() {
           <footer>
             <div>
               <strong>FINDAPP</strong>
-              <span>필요한 도구를 찾는 가장 단순한 방법</span>
+              <span>필요한 도구를 가장 간단하게 찾아보세요</span>
             </div>
-            <p>서비스 요금과 가입 조건은 실제 사이트의 최신 안내를 확인해줘</p>
+            <p>서비스 요금과 가입 조건은 각 사이트의 최신 안내를 확인해 주세요</p>
           </footer>
         </section>
+        {installHelp && (
+          <div className="install-sheet-backdrop" onClick={() => setInstallHelp(false)}>
+            <section className="install-sheet" onClick={(event) => event.stopPropagation()}>
+              <button className="install-sheet-close" onClick={() => setInstallHelp(false)} aria-label="닫기">×</button>
+              <p className="eyebrow">PWA INSTALL</p>
+              <h2>FINDAPP을 앱처럼 설치해 보세요</h2>
+              <div className="install-guide">
+                <div>
+                  <strong>iPhone / iPad</strong>
+                  <span>Safari 하단의 공유 버튼을 누른 뒤 <b>홈 화면에 추가</b>를 선택해 주세요</span>
+                </div>
+                <div>
+                  <strong>Android / Chrome</strong>
+                  <span>브라우저 메뉴에서 <b>앱 설치</b> 또는 <b>홈 화면에 추가</b>를 선택해 주세요</span>
+                </div>
+                <div>
+                  <strong>PC Chrome / Edge</strong>
+                  <span>주소창 오른쪽의 설치 아이콘을 눌러 설치하실 수 있습니다</span>
+                </div>
+              </div>
+              <button className="install-sheet-done" onClick={() => setInstallHelp(false)}>확인</button>
+            </section>
+          </div>
+        )}
+
+        <nav className="mobile-bottom-nav" aria-label="모바일 메뉴">
+          <button onClick={() => scrollTo('home')}><span>⌂</span><small>홈</small></button>
+          <button onClick={() => scrollTo('smu-links')}><span>SM</span><small>상명대</small></button>
+          <button onClick={() => scrollTo('results')}><span>⌕</span><small>도구</small></button>
+          <button onClick={showFavorites}><span>★</span><small>즐겨찾기</small></button>
+          {!isInstalled && <button onClick={handleInstall}><span>＋</span><small>설치</small></button>}
+        </nav>
       </main>
     </div>
   )
