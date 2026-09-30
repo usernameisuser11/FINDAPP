@@ -333,6 +333,13 @@ function App() {
     }, 0)
   }
 
+  const showRecent = () => {
+    resetFilters()
+    window.setTimeout(() => {
+      document.getElementById('recent')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 0)
+  }
+
   const handleInstall = async () => {
     if (isInstalled) return
 
@@ -391,9 +398,7 @@ function App() {
 
           <button
             className="side-item"
-            onClick={() => {
-              document.getElementById('recent')?.scrollIntoView({ behavior: 'smooth' })
-            }}
+            onClick={showRecent}
           >
             <span className="side-icon">◷</span>
             <span>최근 본 도구</span>
