@@ -1,0 +1,22 @@
+{
+  "name": "FINDAPP - 상명대 학생 도구 허브",
+  "short_name": "FINDAPP",
+  "description": "상명대 주요 서비스와 대학생활에 필요한 웹 도구를 빠르게 찾는 학생용 허브",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "background_color": "#07090d",
+  "theme_color": "#07090d",
+  "orientation": "portrait-primary",
+  "lang": "ko-KR",
+  "categories": ["education", "productivity", "utilities"],
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
