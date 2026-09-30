@@ -460,7 +460,6 @@ function App() {
               value={query}
               onChange={(event) => searchAllTools(event.target.value)}
               placeholder="PDF 합치기, 논문 찾기, 무료 이미지, 코딩 오류..."
-              autoFocus
             />
             <kbd>Ctrl/⌘ K</kbd>
             {query && (
