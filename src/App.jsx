@@ -179,6 +179,23 @@ function App() {
     }
   }, [])
 
+  useEffect(() => {
+    const handleShortcut = (event) => {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault()
+        document.getElementById('findapp-search')?.focus()
+      }
+
+      if (event.key === 'Escape' && document.activeElement?.id === 'findapp-search') {
+        setQuery('')
+        document.getElementById('findapp-search')?.blur()
+      }
+    }
+
+    window.addEventListener('keydown', handleShortcut)
+    return () => window.removeEventListener('keydown', handleShortcut)
+  }, [])
+
   const filtered = useMemo(() => {
     const keyword = query.trim().toLowerCase()
 
@@ -232,6 +249,15 @@ function App() {
     .filter(Boolean)
     .slice(0, 6)
 
+  const hasFocusedResults =
+    query.trim().length > 0 ||
+    category !== '전체' ||
+    favoritesOnly ||
+    freeOnly ||
+    noSignupOnly ||
+    koreanOnly ||
+    aiOnly
+
   const toggleFavorite = (id) => {
     setFavorites((current) => {
       const next = current.includes(id)
@@ -268,20 +294,40 @@ function App() {
 
   const searchAllTools = (value) => {
     setQuery(value)
+
     if (value.trim()) {
       setCategory('전체')
       setFavoritesOnly(false)
+      setFreeOnly(false)
+      setNoSignupOnly(false)
+      setKoreanOnly(false)
+      setAiOnly(false)
     }
   }
 
   const selectCategory = (item) => {
+    setQuery('')
     setCategory(item)
     setFavoritesOnly(false)
+    setFreeOnly(false)
+    setNoSignupOnly(false)
+    setKoreanOnly(false)
+    setAiOnly(false)
+
+    window.setTimeout(() => {
+      document.getElementById('results')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 0)
   }
 
   const showFavorites = () => {
+    setQuery('')
     setFavoritesOnly(true)
     setCategory('전체')
+    setFreeOnly(false)
+    setNoSignupOnly(false)
+    setKoreanOnly(false)
+    setAiOnly(false)
+
     window.setTimeout(() => {
       document.getElementById('results')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }, 0)
@@ -405,12 +451,13 @@ function App() {
           <label className="search-box">
             <span className="search-icon" aria-hidden="true">⌕</span>
             <input
+              id="findapp-search"
               value={query}
               onChange={(event) => searchAllTools(event.target.value)}
               placeholder="PDF 합치기, 논문 찾기, 무료 이미지, 코딩 오류..."
               autoFocus
             />
-            <kbd>⌘ K</kbd>
+            <kbd>Ctrl/⌘ K</kbd>
             {query && (
               <button onClick={() => setQuery('')} aria-label="검색어 지우기">
                 ×
@@ -427,6 +474,7 @@ function App() {
             ))}
           </div>
 
+          {!hasFocusedResults && (
           <section className="smu-quick" id="smu-links">
             <div className="smu-heading">
               <div>
@@ -448,6 +496,7 @@ function App() {
               ))}
             </div>
           </section>
+          )}
 
           <div className="mobile-categories">
             {categories.map((item) => (
@@ -504,22 +553,24 @@ function App() {
             </button>
           </div>
 
-          <section className="picks">
-            <PickCard
-              label="TODAY'S PICK"
-              tool={dailyPick}
-              onOpen={openTool}
-              accent
-            />
-            <PickCard
-              label="RANDOM FIND"
-              tool={randomTool}
-              onOpen={openTool}
-              onShuffle={pickRandom}
-            />
-          </section>
+          {!hasFocusedResults && (
+            <section className="picks">
+              <PickCard
+                label="TODAY'S PICK"
+                tool={dailyPick}
+                onOpen={openTool}
+                accent
+              />
+              <PickCard
+                label="RANDOM FIND"
+                tool={randomTool}
+                onOpen={openTool}
+                onShuffle={pickRandom}
+              />
+            </section>
+          )}
 
-          {recentTools.length > 0 && (
+          {!hasFocusedResults && recentTools.length > 0 && (
             <section className="recent-section" id="recent">
               <div className="section-heading">
                 <div>
@@ -614,7 +665,10 @@ function App() {
 
         <nav className="mobile-bottom-nav" aria-label="모바일 메뉴">
           <button onClick={() => scrollTo('home')}><span>⌂</span><small>홈</small></button>
-          <button onClick={() => scrollTo('smu-links')}><span>SM</span><small>상명대</small></button>
+          <button onClick={() => {
+            resetFilters()
+            window.setTimeout(() => scrollTo('smu-links'), 0)
+          }}><span>SM</span><small>상명대</small></button>
           <button onClick={() => scrollTo('results')}><span>⌕</span><small>도구</small></button>
           <button onClick={showFavorites}><span>★</span><small>즐겨찾기</small></button>
           {!isInstalled && <button onClick={handleInstall}><span>＋</span><small>설치</small></button>}
