@@ -1421,7 +1421,7 @@ export const tools = [
     name: 'Google AI Plus 학생 혜택',
     category: '대학생활',
     description: '국내 대학생 대상 Google AI 학생 혜택 정보를 확인할 수 있는 안내 항목으로 신청 기한과 자동결제 조건 확인이 필요',
-    url: 'https://blog.google/intl/ko-kr/',
+    url: 'https://www.smu.ac.kr/kor/life/notice.do?articleNo=768488&mode=view',
     tags: ['학생혜택', 'Google AI', 'Gemini', '대학생'],
     cost: '학생 혜택 (조건 확인)',
     noSignup: false,
