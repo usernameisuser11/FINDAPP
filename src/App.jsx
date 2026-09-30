@@ -229,6 +229,14 @@ function App() {
     setFavoritesOnly(false)
   }
 
+  const searchAllTools = (value) => {
+    setQuery(value)
+    if (value.trim()) {
+      setCategory('전체')
+      setFavoritesOnly(false)
+    }
+  }
+
   const selectCategory = (item) => {
     setCategory(item)
     setFavoritesOnly(false)
@@ -326,7 +334,7 @@ function App() {
             <span className="search-icon" aria-hidden="true">⌕</span>
             <input
               value={query}
-              onChange={(event) => setQuery(event.target.value)}
+              onChange={(event) => searchAllTools(event.target.value)}
               placeholder="PDF 합치기, 논문 찾기, 무료 이미지, 코딩 오류..."
               autoFocus
             />
@@ -341,7 +349,7 @@ function App() {
           <div className="quick-searches">
             <span>Quick search</span>
             {['PDF', '논문', '무료 이미지', 'PPT', '코딩', '취업'].map((item) => (
-              <button key={item} onClick={() => setQuery(item)}>
+              <button key={item} onClick={() => searchAllTools(item)}>
                 {item}
               </button>
             ))}
